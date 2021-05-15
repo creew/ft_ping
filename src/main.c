@@ -8,16 +8,44 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include <netinet/in.h>
+#include <netinet/in_systm.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
+
 static t_ft_ping ft_ping;
 
 int parse_arg(char *arg, int *narg, int argc) {
 	return 0;
 }
 
+int parseOptionC(int argc, char *const *argv, char *arg, int i)
+{
+	int err;
+
+	err = 0;
+	arg++;
+	if (*arg == 0) {
+		if (i < argc) {
+			arg = argv[i++];
+		}
+		else {
+			err = 1;
+		}
+	}
+	if (err || ft_safe_atoi(arg, &ft_ping.count) != FT_ATOI_OK || ft_ping.count <= 0) {
+		err_fmt(INVALID_COUNT_OF_PACKETS, "invalid count of packets to transmit: '%s'", arg);
+	}
+	dlog("count of packets: %d", ft_ping.count);
+	return i;
+}
+
+
 int parse_argv(int argc, char *argv[])
 {
 	char *arg;
 	int i;
+
 	i = 0;
 	while (i < argc)
 	{
@@ -26,19 +54,7 @@ int parse_argv(int argc, char *argv[])
 		{
 			arg++;
 			if (*arg == 'c') {
-				arg++;
-				if (*arg == 0) {
-					if (i < argc) {
-						arg = argv[i++];
-					}
-					else {
-						err_fmt(INVALID_COUNT_OF_PACKETS, "invalid count of packets to transmit: '%s'", arg);
-					}
-				}
-				if (ft_safe_atoi(arg, &ft_ping.count) != FT_ATOI_OK || ft_ping.count <= 0) {
-					err_fmt(INVALID_COUNT_OF_PACKETS, "invalid count of packets to transmit: '%s'", arg);
-				}
-				dlog("count of packets: %d", ft_ping.count);
+				i = parseOptionC(argc, argv, arg, i);
 			}
 		}
 		else
@@ -54,10 +70,41 @@ int parse_argv(int argc, char *argv[])
 }
 
 void send_req() {
-	int sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
+	int on;
+	char send_buf[400], recv_buf[400], src_name[256], src_ip[15], dst_ip[15];
+	struct ip *ip = (struct ip *)send_buf;
+	struct icmp *icmp = (struct icmp *)(ip + 1);
+	struct sockaddr_in src, dst;
+	int sock;
+
+	sock = socket(PF_INET, SOCK_RAW, IPPROTO_ICMP);
 	if (sock < 0) {
-		dlog("socket error: %d, errno: %d", sock, errno);
+		dlog("socket error: %d, errno: %s", sock, strerror(errno));
 	}
+	on = 1;
+	if (setsockopt(sock, IPPROTO_IP, IP_HDRINCL, &on, sizeof(on)) < 0)
+	{
+		dlog("setsockopt() for IP_HDRINCL error %s", strerror(errno));
+		exit(EXIT_FAILURE);
+	}
+	/* IP structure, check the ip.h */
+	ip->ip_v = 4;
+	ip->ip_hl = 5;
+	ip->ip_tos = 0;
+	ip->ip_len = htons(sizeof(send_buf));
+	ip->ip_id = htons(321);
+	ip->ip_off = htons(0);
+	ip->ip_ttl = 255;
+	ip->ip_p = IPPROTO_ICMP;
+	ip->ip_sum = 0;
+
+	/* ICMP structure, check ip_icmp.h */
+	icmp->icmp_type = ICMP_ECHO;
+	icmp->icmp_code = 0;
+	icmp->icmp_id = 123;
+	icmp->icmp_seq = 0;
+	icmp->icmp_cksum = 0;
+
 	alarm(1);
 }
 
@@ -89,20 +136,15 @@ int sizeaddr(struct addrinfo *res) {
 		size++;
 		struct sockaddr *addr = res->ai_addr;
 		struct sockaddr_in *addr_in = addr;
-		dlog("len: %d, family: %d, addr: %s", addr->sa_len, addr->sa_family, inet_ntoa(addr_in->sin_addr));
+		dlog("family: %d, addr: %s", addr->sa_family, inet_ntoa(addr_in->sin_addr));
 		res = res->ai_next;
 	}
 	return size;
 }
 
 int f(char *addr){
-	struct addrinfo hints;
 	struct addrinfo *result;
-	ft_memset(&hints, 0, sizeof(hints));
-	hints.ai_family = PF_INET;
-	hints.ai_socktype = SOCK_DGRAM;
-	hints.ai_flags = AI_PASSIVE;
-	int t = getaddrinfo( addr, NULL, &hints, &result);
+	int t = getaddrinfo(addr, NULL, NULL, &result);
 	if (t == 0) {
 		ft_ping.sin_addr = ((struct sockaddr_in *)result->ai_addr)->sin_addr;
 	}

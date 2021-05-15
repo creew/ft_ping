@@ -1,5 +1,5 @@
 #include "libft.h"
 
 void print_usage() {
-	ft_putendl("Usage: ping [-vh]");
+	ft_putendl("Usage: ping [-vh] [-c count] host");
 }

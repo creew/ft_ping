@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.13)
 project(ft_ping C)
 
 set(CMAKE_C_STANDARD 99)
@@ -9,5 +9,9 @@ include_directories(
         libft/includes
         includes)
 
-add_executable(ft_ping src/main.c src/usage.c src/logger.c)
+add_executable(ft_ping
+        src/main.c
+        src/usage.c
+        src/logger.c
+        src/icmp/chksum.c)
 target_link_libraries(ft_ping ft)

@@ -26,5 +26,6 @@ enum errors {
 void dlog(char *fmt, ...);
 void err(int code);
 void err_fmt(int code, char *fmt, ...);
+unsigned short    chksum(char *addr, size_t len);
 
 #endif
