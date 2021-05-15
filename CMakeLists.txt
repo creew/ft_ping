@@ -5,8 +5,9 @@ set(CMAKE_C_STANDARD 99)
 
 add_subdirectory(libft)
 
-include_directories(libft/includes
+include_directories(
+        libft/includes
         includes)
 
-add_executable(ft_ping src/main.c src/usage.c)
+add_executable(ft_ping src/main.c src/usage.c src/logger.c)
 target_link_libraries(ft_ping ft)
