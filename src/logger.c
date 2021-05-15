@@ -6,6 +6,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
 
 void dlog(char *fmt, ...) {
@@ -16,5 +17,18 @@ void dlog(char *fmt, ...) {
 	printf("\x1b[31mpid: %d\x1b[0m, \x1b[32muid: %u\x1b[0m ", pid, uid);
 	vprintf(fmt, argptr);
 	printf("\n");
+	va_end(argptr);
+}
+
+void err(int code) {
+	exit(code);
+}
+
+void err_fmt(int code, char *fmt, ...) {
+	va_list argptr;
+	va_start(argptr, fmt);
+	vdprintf(2, fmt, argptr);
+	dprintf(2, "\n");
+	err(code);
 	va_end(argptr);
 }
