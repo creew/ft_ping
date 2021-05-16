@@ -1,3 +1,3 @@
 docker build -t debianssh .
 
-docker run -d debianssh -p 8022:22
+docker run -d -p 8022:22 debianssh 

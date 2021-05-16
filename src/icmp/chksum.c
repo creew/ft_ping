@@ -3,23 +3,21 @@
 //
 #include "ft_ping.h"
 
-unsigned short    chksum(char *addr, size_t len)
+unsigned short    chksum(void *addr, size_t len)
 {
 	unsigned int sum;
-	unsigned short word;
+	unsigned short *data;
 
 	sum = 0;
+	data = (unsigned short *)addr;
 	while (len > 1)
 	{
-		word = *addr++;
-		word |= *addr++ << 8;
+		sum += *data++;
 		len -= 2;
-		sum += word;
 	}
 	if (len > 0)
-		sum += *addr;
+		sum += *(unsigned char *)addr;
 	while (sum>>16)
 		sum = (sum & 0xffff) + (sum >> 16);
-
 	return (~sum);
 }

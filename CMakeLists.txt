@@ -13,5 +13,6 @@ add_executable(ft_ping
         src/main.c
         src/usage.c
         src/logger.c
-        src/icmp/chksum.c)
+        src/icmp/chksum.c
+        src/parse_arg.c)
 target_link_libraries(ft_ping ft)
