@@ -4,21 +4,29 @@
 #include "libft.h"
 
 #include <netinet/in.h>
+#include <sys/time.h>
 
+#define SEND_BUF_SZ (65535)
+#define RECV_BUF_SZ (65535)
+
+typedef struct ping_elem {
+	struct ping_elem * next;
+	int id;
+	struct timeval send_time;
+} t_ping_elem;
 
 typedef struct s_ft_ping {
 	char *host;
 	int count;
 	int count_total;
-	int count_managed;
 	int pid;
 	int seq;
 	int sock;
 	unsigned int delay;
 	int packet_size;
+	t_ping_elem *root;
 	unsigned int packets_send;
 	unsigned int packets_recv;
-	unsigned char snd_buf[65535];
 	struct in_addr sin_addr;
 	socklen_t ai_addrlen;
 	struct sockaddr *ai_addr;
@@ -32,6 +40,7 @@ enum errors {
 	UNKNOWN_HOST,
     INVALID_COUNT_OF_PACKETS,
 	INVALID_SIZE_OF_PACKETS,
+	NO_MEMORY,
 	OK = 0
 };
 
@@ -42,4 +51,7 @@ void err(int code);
 void err_fmt(int code, char *fmt, ...);
 unsigned short    chksum(void *addr, size_t len);
 
+
+t_ping_elem *add_to_queue(t_ping_elem **root, int id);
+t_ping_elem *poll_elem(t_ping_elem **root, int id);
 #endif

@@ -3,14 +3,11 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <netdb.h>
+#include <netinet/ip.h>
+#include <netinet/ip_icmp.h>
 #include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-#include <netinet/in.h>
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
 
 t_ft_ping ft_ping;
 
@@ -29,21 +26,26 @@ void fill_payload(unsigned char *payload, int size) {
 
 void send_icmp()
 {
+	unsigned char snd_buf[SEND_BUF_SZ];
 	struct icmp *icmp;
 	unsigned char *payload;
 
-	icmp = (struct icmp *)ft_ping.snd_buf;
+	icmp = (struct icmp *)snd_buf;
 	icmp->icmp_type = ICMP_ECHO;
 	icmp->icmp_code = 0;
 	icmp->icmp_id = ft_ping.pid;
 	icmp->icmp_seq = ++ft_ping.seq;
 	icmp->icmp_cksum = 0;
-	payload = ft_ping.snd_buf + 8;
+	payload = snd_buf + 8;
 	fill_payload(payload, ft_ping.packet_size);
-	icmp->icmp_cksum = chksum(ft_ping.snd_buf, ft_ping.packet_size + 8);
-	size_t res = sendto(ft_ping.sock, ft_ping.snd_buf, ft_ping.packet_size + 8,
+	icmp->icmp_cksum = chksum(snd_buf, ft_ping.packet_size + 8);
+	ssize_t res = sendto(ft_ping.sock, snd_buf, ft_ping.packet_size + 8,
 						  0, ft_ping.ai_addr, ft_ping.ai_addrlen);
-	dlog("sent: %lu", res);
+	if (res >= 0) {
+		ft_ping.packets_send++;
+		add_to_queue(&ft_ping.root, ft_ping.seq);
+	}
+	dlog("sent: %ld", res);
 	alarm(1);
 }
 
@@ -85,10 +87,6 @@ void int_handler(int sig) {
 	exit(0);
 }
 
-const char *ntop(struct sockaddr *addr, char *dst, size_t size) {
-	return inet_ntop(addr->sa_family, addr, dst, size);
-}
-
 int get_addr(char *addr)
 {
 	struct addrinfo *result;
@@ -114,8 +112,66 @@ void init_ft_ping()
 	ft_ping.sock = -1;
 	ft_ping.count = -1;
 	ft_ping.count_total = -1;
-	ft_ping.count_managed = 0;
 }
+
+long tv_diff(struct timeval *tv1, struct timeval *tv2) {
+	return (tv1->tv_sec - tv2->tv_sec) * 1000000 + (tv1->tv_usec - tv2->tv_usec);
+}
+
+void parse_ipv4(const unsigned char *recv_buf, ssize_t received)
+{
+	dlog("received %ld bytes", received);
+	struct ip * ip = (struct ip *)recv_buf;
+	dlog("sizeof(ip): %d, protocol: %d, tos: %d, len: %d, id: %d, off: %d",
+		 sizeof(struct ip), ip->ip_p, ip->ip_tos, ntohs(ip->ip_len), ntohs(ip->ip_id), ntohs(ip->ip_off));
+	if (ip->ip_p == IPPROTO_ICMP) {
+		struct icmp *icmp = (struct icmp *)(recv_buf + sizeof(struct ip));
+		if (icmp->icmp_type == ICMP_ECHOREPLY && icmp->icmp_hun.ih_idseq.icd_id == ft_ping.pid ) {
+			dlog("type: %d, id: %d, seq: %d", icmp->icmp_type, icmp->icmp_hun.ih_idseq.icd_id, icmp->icmp_hun.ih_idseq.icd_seq);
+			t_ping_elem *elem = poll_elem(&ft_ping.root, icmp->icmp_hun.ih_idseq.icd_seq);
+			if (elem != NULL) {
+				struct timeval tv;
+				gettimeofday(&tv, NULL);
+				long diff = tv_diff(&tv, &elem->send_time);
+				dlog("%d bytes from (): icmp_seq=%d ttl=%d time=%.3f ms",
+					 received - sizeof(struct ip), icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl, diff/1000.0);
+				ft_ping.packets_recv++;
+				ft_memdel((void **)&elem);
+			}
+		}
+	}
+}
+
+static void recv_msg()
+{
+	struct iovec io;
+	struct msghdr msg;
+	struct sockaddr_in recv;
+	unsigned char recv_buf[65535];
+	unsigned char ancdata[65535];
+
+	ft_memset(&msg, 0, sizeof(msg));
+	ft_memset(&recv, 0, sizeof(recv));
+	io.iov_base = recv_buf;
+	io.iov_len = sizeof(recv_buf);
+	msg.msg_iov = &io;
+	msg.msg_iovlen = 1;
+	msg.msg_control = ancdata;
+	msg.msg_controllen = sizeof(ancdata);
+	msg.msg_flags = 0;
+	msg.msg_name = &recv;
+	msg.msg_namelen = sizeof(recv);
+	ssize_t received = recvmsg(ft_ping.sock, &msg, 0);
+	if (received < 0) {
+		if (errno != EINTR)
+		{
+			dlog("recvmsg error: %d, %s", errno, strerror(errno));
+		}
+	} else {
+		parse_ipv4(recv_buf, received);
+	}
+}
+
 
 int main(int argc, char *argv[])
 {
@@ -134,36 +190,14 @@ int main(int argc, char *argv[])
 	dlog("host: %s", ft_ping.addr);
 	prepare_socket();
 	send_icmp();
-	while (ft_ping.count_managed != ft_ping.count_total)
+	while (ft_ping.packets_recv != ft_ping.count_total)
 	{
-		unsigned char recv_buf[65535];
-		unsigned char ancdata[65535];
 		if (ft_ping.sock != -1)
 		{
-			struct iovec io;
-			struct msghdr msg;
-			struct sockaddr_in recv;
-
-			ft_memset(&msg, 0, sizeof(msg));
-			ft_memset(&recv, 0, sizeof(recv));
-			io.iov_base = recv_buf;
-			io.iov_len = sizeof(recv_buf);
-			msg.msg_iov = &io;
-			msg.msg_iovlen = 1;
-			msg.msg_control = ancdata;
-			msg.msg_controllen = sizeof(ancdata);
-			msg.msg_flags = 0;
-			msg.msg_name = &recv;
-			msg.msg_namelen = sizeof(recv);
-			ssize_t received = recvmsg(ft_ping.sock, &msg, 0);
-			if (received < 0) {
-				if (errno != EINTR)
-				{
-					dlog("recvmsg error: %d, %s", errno, strerror(errno));
-				}
-			} else {
-				dlog("received %ld bytes", received);
-			}
+			recv_msg();
 		}
 	}
+	dlog("0x%x", ft_ping.root);
+
 }
+

@@ -44,12 +44,11 @@ static int parse_option_s(int argc, char **argv, char *arg, int i)
 	if (res != FT_ATOI_OK) {
 		err_fmt(INVALID_SIZE_OF_PACKETS, "invalid packet size");
 	}
-	if (ft_ping.packet_size <= 0)
+	if (ft_ping.packet_size < 0)
 		err_fmt(INVALID_SIZE_OF_PACKETS, "invalid negative size: %s", arg);
-	if (ft_ping.packet_size > sizeof(ft_ping.snd_buf) - sizeof(struct icmp))
+	if (ft_ping.packet_size > SEND_BUF_SZ - sizeof(struct icmp))
 		err_fmt(INVALID_SIZE_OF_PACKETS,
-				"packet size cannot be greater than %d",
-				sizeof(ft_ping.snd_buf) - sizeof(struct icmp));
+				"packet size cannot be greater than %d", SEND_BUF_SZ - sizeof(struct icmp));
 	dlog("size of packets: %d", ft_ping.packet_size);
 	return i;
 }
