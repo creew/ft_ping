@@ -23,45 +23,48 @@ static char *parse_joined_option(int argc, char *const *argv, char *arg, int *i)
 	return arg;
 }
 
-static int parse_option_c(int argc, char *const *argv, char *arg, int i)
+static void parse_option_c(int argc, char *const *argv, char *arg, int *i)
 {
-	arg = parse_joined_option(argc, argv, arg, &i);
-	if (arg == NULL || ft_safe_atoi(arg, &ft_ping.count) != FT_ATOI_OK ||
-		ft_ping.count <= 0)
-		err_fmt(INVALID_COUNT_OF_PACKETS,
-				"invalid count of packets to transmit: '%s'", arg);
+	arg = parse_joined_option(argc, argv, arg, i);
+	if (arg == NULL)
+		err_fmt_usage(OPTION_REQUIRED, "ping: option requires an argument -- 'c'");
+	ft_ping.count = ft_strtol(arg, NULL, 10);
+	if (ft_ping.count <= 0)
+		err_fmt(INVALID_COUNT_OF_PACKETS, "ping: bad number of packets to transmit.");
 	ft_ping.count_total = ft_ping.count;
 	dlog("count of packets: %d", ft_ping.count);
-	return i;
 }
 
-static int parse_option_s(int argc, char **argv, char *arg, int i)
+static void parse_option_s(int argc, char **argv, char *arg, int *i)
 {
-	arg = parse_joined_option(argc, argv, arg, &i);
+	arg = parse_joined_option(argc, argv, arg, i);
 	if (arg == NULL)
-		err_fmt(INVALID_SIZE_OF_PACKETS, "empty packet size");
-	int res = ft_safe_atoi(arg, &ft_ping.packet_size);
-	if (res != FT_ATOI_OK) {
-		err_fmt(INVALID_SIZE_OF_PACKETS, "invalid packet size");
-	}
+		err_fmt_usage(OPTION_REQUIRED, "ping: option requires an argument -- 's'");
+	ft_ping.packet_size = ft_strtol(arg, NULL, 10);
 	if (ft_ping.packet_size < 0)
-		err_fmt(INVALID_SIZE_OF_PACKETS, "invalid negative size: %s", arg);
+		err_fmt(INVALID_COUNT_OF_PACKETS, "ping: illegal negative packet size %d.", ft_ping.packet_size);
 	if (ft_ping.packet_size > SEND_BUF_SZ - sizeof(struct icmp))
-		err_fmt(INVALID_SIZE_OF_PACKETS,
-				"packet size cannot be greater than %d", SEND_BUF_SZ - sizeof(struct icmp));
+		err_fmt(INVALID_SIZE_OF_PACKETS, "Error: packet size 65600 is too large. Maximum is %lu", SEND_BUF_SZ - sizeof(struct icmp));
 	dlog("size of packets: %d", ft_ping.packet_size);
-	return i;
 }
 
-static int parse_options(int argc, char *argv[], char *arg, int i)
+static int parse_options(int argc, char *argv[], char *arg, int *i)
 {
+	int contin;
+
+	contin = 0;
 	if (*arg == 'c')
-		i = parse_option_c(argc, argv, ++arg, i);
+		parse_option_c(argc, argv, ++arg, i);
 	else if (*arg == 's')
-		i = parse_option_s(argc, argv, ++arg, i);
+		parse_option_s(argc, argv, ++arg, i);
 	else if (*arg == 'h')
 		print_usage(2);
-	return i;
+	else if (*arg == 'v')
+	{
+		ft_ping.debug_log = 1;
+		contin = 1;
+	}
+	return contin;
 }
 
 int parse_argv(int argc, char *argv[])
@@ -72,10 +75,13 @@ int parse_argv(int argc, char *argv[])
 	i = 0;
 	while (i < argc)
 	{
-
 		arg = argv[i++];
 		if (*arg == '-')
-			i = parse_options(argc, argv, ++arg, i);
+		{
+			while (parse_options(argc, argv, ++arg, &i))
+			{
+			}
+		}
 		else
 		{
 			if (ft_ping.host == NULL)

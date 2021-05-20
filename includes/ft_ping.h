@@ -17,19 +17,26 @@ typedef struct ping_elem {
 
 typedef struct s_ft_ping {
 	char *host;
+
+	char debug_log;
 	int count;
-	int count_total;
+	int packet_size;
+	unsigned int delay;
+	int	ttl;
+
 	int pid;
+
+	int count_total;
 	int seq;
 	int sock;
-	unsigned int delay;
-	int packet_size;
+
 	t_ping_elem *root;
 	unsigned int packets_send;
 	unsigned int packets_recv;
+	unsigned int packets_loss;
 	struct in_addr sin_addr;
 	socklen_t ai_addrlen;
-	struct sockaddr *ai_addr;
+	struct sockaddr ai_addr;
 	char addr[INET6_ADDRSTRLEN];
 } t_ft_ping;
 
@@ -39,6 +46,7 @@ enum errors {
 	CANNOT_SET_SIGNAL,
 	UNKNOWN_HOST,
     INVALID_COUNT_OF_PACKETS,
+	OPTION_REQUIRED,
 	INVALID_SIZE_OF_PACKETS,
 	NO_MEMORY,
 	OK = 0
@@ -49,6 +57,7 @@ int parse_argv(int argc, char *argv[]);
 void dlog(char *fmt, ...);
 void err(int code);
 void err_fmt(int code, char *fmt, ...);
+void err_fmt_usage(int code, char *fmt, ...);
 unsigned short    chksum(void *addr, size_t len);
 
 
