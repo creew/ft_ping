@@ -1,6 +1,14 @@
-//
-// Created by Алексей on 15.05.2021.
-//
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   logger.c                                           :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: eklompus <eklompus@student.21-school.ru>   +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2021/05/21 22:16:00 by eklompus          #+#    #+#             */
+/*   Updated: 2021/05/21 22:16:00 by eklompus         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "ft_ping.h"
 
@@ -9,14 +17,17 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void dlog(char *fmt, ...)
+void	dlog(char *fmt, ...)
 {
-	if (ft_ping.debug_log)
+	va_list			argptr;
+	int				pid;
+	unsigned int	uid;
+
+	if (g_ft_ping.debug_log)
 	{
-		va_list argptr;
 		va_start(argptr, fmt);
-		int pid = getpid();
-		unsigned int uid = getuid();
+		pid = getpid();
+		uid = getuid();
 		printf("\x1b[31mpid: %d\x1b[0m, \x1b[32muid: %u\x1b[0m ", pid, uid);
 		vprintf(fmt, argptr);
 		printf("\n");
@@ -24,21 +35,21 @@ void dlog(char *fmt, ...)
 	}
 }
 
-void err(int code) {
-	exit(code);
-}
+void	err_fmt(int code, char *fmt, ...)
+{
+	va_list	argptr;
 
-void err_fmt(int code, char *fmt, ...) {
-	va_list argptr;
 	va_start(argptr, fmt);
 	vdprintf(2, fmt, argptr);
 	dprintf(2, "\n");
-	err(code);
+	exit(code);
 	va_end(argptr);
 }
 
-void err_fmt_usage(int code, char *fmt, ...) {
-	va_list argptr;
+void	err_fmt_usage(int code, char *fmt, ...)
+{
+	va_list	argptr;
+
 	va_start(argptr, fmt);
 	vdprintf(2, fmt, argptr);
 	dprintf(2, "\n");

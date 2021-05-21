@@ -10,11 +10,15 @@ include_directories(
         includes)
 
 add_executable(ft_ping
-        src/main.c
         src/usage.c
         src/logger.c
-        src/icmp/chksum.c
+        src/parse_ipv4.c
+        src/util.c
+        src/statistics.c
         src/parse_arg.c
         src/queue/qping.c
-        src/statistics.c)
-target_link_libraries(ft_ping ft)
+        src/process_ping.c
+        src/main.c
+        src/icmp/chksum.c
+        src/parse_options_sct.c)
+target_link_libraries(ft_ping ft m)

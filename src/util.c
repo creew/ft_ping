@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   usage.c                                            :+:      :+:    :+:   */
+/*   util.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: eklompus <eklompus@student.21-school.ru>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -10,13 +10,30 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
+#include "ft_ping.h"
 
-#include <stdlib.h>
-
-void	print_usage(int code)
+void	fill_payload(unsigned char *payload, int size)
 {
-	ft_putendl("Usage: ping [-vh] [-c count] [-s packetsize] [-t ttl] "
-		"destination\n");
-	exit(code);
+	int	i;
+	int	alphabet_size;
+
+	i = 0;
+	alphabet_size = 'z' - 'a' + 1;
+	while (i < size)
+	{
+		*payload++ = 'a' + i % alphabet_size;
+		i++;
+	}
+}
+
+long	tv_diff_nano(struct timeval *end, struct timeval *start)
+{
+	return ((end->tv_sec - start->tv_sec) * 1000000
+		+ (end->tv_usec - start->tv_usec));
+}
+
+long	tv_diff_micro(struct timeval *end, struct timeval *start)
+{
+	return ((end->tv_sec - start->tv_sec) * 1000
+		+ (end->tv_usec - start->tv_usec) / 1000);
 }
