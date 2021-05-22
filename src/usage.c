@@ -16,7 +16,7 @@
 
 void	print_usage(int code)
 {
-	ft_putendl("Usage: ping [-vh] [-c count] [-s packetsize] [-t ttl] "
-		"destination\n");
+	ft_putendl("Usage: ping [-vh] [-c count] [-s packetsize] [-i interval] "
+			   "[-t ttl] destination\n");
 	exit(code);
 }

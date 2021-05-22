@@ -59,7 +59,7 @@ int	get_addr(char *addr)
 void	init_ft_ping(void)
 {
 	ft_memset(&g_ft_ping, 0, sizeof(g_ft_ping));
-	g_ft_ping.delay = 1;
+	g_ft_ping.interval = 1;
 	g_ft_ping.ttl = 54;
 	g_ft_ping.pid = getpid();
 	g_ft_ping.seq = 0;

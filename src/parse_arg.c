@@ -15,6 +15,9 @@
 
 char	*parse_joined_option(int argc, char *const *argv, char *arg, int *i)
 {
+	char	arg_symbol;
+
+	arg_symbol = *arg++;
 	if (*arg == 0)
 	{
 		if (*i < argc)
@@ -23,7 +26,8 @@ char	*parse_joined_option(int argc, char *const *argv, char *arg, int *i)
 			*i = *i + 1;
 		}
 		else
-			return (NULL);
+			err_fmt_usage(OPTION_REQUIRED,
+				"ping: option requires an argument -- '%c'", arg_symbol);
 	}
 	else
 	{
@@ -39,11 +43,13 @@ static int	parse_options(int argc, char *argv[], char *arg, int *i)
 
 	contin = 0;
 	if (*arg == 'c')
-		parse_option_c(argc, argv, ++arg, i);
+		parse_option_c(argc, argv, arg, i);
 	else if (*arg == 's')
-		parse_option_s(argc, argv, ++arg, i);
+		parse_option_s(argc, argv, arg, i);
 	else if (*arg == 't')
-		parse_option_t(argc, argv, ++arg, i);
+		parse_option_t(argc, argv, arg, i);
+	else if (*arg == 'i')
+		parse_option_i(argc, argv, arg, i);
 	else if (*arg == 'h')
 		print_usage(2);
 	else if (*arg == 'v')

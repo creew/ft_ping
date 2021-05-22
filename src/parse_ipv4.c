@@ -56,7 +56,7 @@ static void	parse_founded_packet(ssize_t received, const struct ip *ip,
 	ft_memdel((void **)elem);
 }
 
-void parse_icmp(const unsigned char *recv_buf, ssize_t received,
+void	parse_icmp(const unsigned char *recv_buf, ssize_t received,
 				const struct ip *ip)
 {
 	struct icmp	*icmp;
@@ -67,14 +67,17 @@ void parse_icmp(const unsigned char *recv_buf, ssize_t received,
 		 icmp->icmp_code, icmp->icmp_hun.ih_idseq.icd_id,
 		 icmp->icmp_hun.ih_idseq.icd_seq);
 	//TODO: Сделать обработку всех типов
-	if (icmp->icmp_type == ICMP_ECHOREPLY
-		&& icmp->icmp_hun.ih_idseq.icd_id == g_ft_ping.pid)
+	if (icmp->icmp_type == ICMP_ECHOREPLY)
 	{
-		elem = poll_elem(&g_ft_ping.root, icmp->icmp_hun.ih_idseq.icd_seq);
-		if (elem != NULL)
-			parse_founded_packet(received, ip, icmp, elem);
+		if (icmp->icmp_hun.ih_idseq.icd_id == g_ft_ping.pid)
+		{
+			elem = poll_elem(&g_ft_ping.root, icmp->icmp_hun.ih_idseq.icd_seq);
+			if (elem != NULL)
+				parse_founded_packet(received, ip, icmp, elem);
+		}
 	}
 }
+
 void	parse_ipv4(const unsigned char *recv_buf, ssize_t received)
 {
 	struct ip	*ip;

@@ -18,10 +18,7 @@
 void	parse_option_c(int argc, char **argv, char *arg, int *i)
 {
 	arg = parse_joined_option(argc, argv, arg, i);
-	if (arg == NULL)
-		err_fmt_usage(OPTION_REQUIRED,
-			"ping: option requires an argument -- 'c'");
-	g_ft_ping.count = ft_strtol(arg, NULL, 10);
+	g_ft_ping.count = (int)ft_strtol(arg, NULL, 10);
 	if (g_ft_ping.count <= 0)
 		err_fmt(INVALID_COUNT_OF_PACKETS,
 			"ping: bad number of packets to transmit.");
@@ -32,10 +29,7 @@ void	parse_option_c(int argc, char **argv, char *arg, int *i)
 void	parse_option_s(int argc, char **argv, char *arg, int *i)
 {
 	arg = parse_joined_option(argc, argv, arg, i);
-	if (arg == NULL)
-		err_fmt_usage(OPTION_REQUIRED,
-			"ping: option requires an argument -- 's'");
-	g_ft_ping.packet_size = ft_strtol(arg, NULL, 10);
+	g_ft_ping.packet_size = (int)ft_strtol(arg, NULL, 10);
 	if (g_ft_ping.packet_size < 0)
 		err_fmt(INVALID_COUNT_OF_PACKETS,
 			"ping: illegal negative packet size %d.",
@@ -50,12 +44,18 @@ void	parse_option_s(int argc, char **argv, char *arg, int *i)
 void	parse_option_t(int argc, char **argv, char *arg, int *i)
 {
 	arg = parse_joined_option(argc, argv, arg, i);
-	if (arg == NULL)
-		err_fmt_usage(OPTION_REQUIRED,
-			"ping: option requires an argument -- 't'");
 	g_ft_ping.ttl = ft_strtol(arg, NULL, 10);
 	if (g_ft_ping.ttl > 255)
 		err_fmt(INVALID_TTL,
 			"ping: ttl %lu out of range", g_ft_ping.ttl);
-	dlog("ttl value is: %lu", g_ft_ping.ttl);
+	dlog("ttl value is: %du", g_ft_ping.ttl);
+}
+
+void	parse_option_i(int argc, char **argv, char *arg, int *i)
+{
+	arg = parse_joined_option(argc, argv, arg, i);
+	g_ft_ping.interval = (int)ft_strtol(arg, NULL, 10);
+	if (g_ft_ping.interval < 0 || g_ft_ping.interval > FT_INTMAX / 1000)
+		err_fmt(INVALID_INTERVAL, "ping: bad timing interval");
+	dlog("interval value is: %d", g_ft_ping.interval);
 }

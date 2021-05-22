@@ -32,10 +32,10 @@ typedef struct s_ping_elem
 
 typedef struct s_rtt
 {
-	float min;
-	float max;
-	float total;
-	float mdev;
+	float	min;
+	float	max;
+	float	total;
+	float	mdev;
 }	t_rtt;
 
 typedef struct s_ft_ping
@@ -44,7 +44,7 @@ typedef struct s_ft_ping
 	char			debug_log;
 	int				count;
 	int				packet_size;
-	unsigned int	delay;
+	int				interval;
 	unsigned int	ttl;
 
 	int				pid;
@@ -75,6 +75,7 @@ enum e_errors
 	UNKNOWN_HOST,
 	INVALID_COUNT_OF_PACKETS,
 	INVALID_TTL,
+	INVALID_INTERVAL,
 	OPTION_REQUIRED,
 	INVALID_SIZE_OF_PACKETS,
 	NO_MEMORY,
@@ -105,4 +106,5 @@ char			*parse_joined_option(int argc, char *const *argv, char *arg,
 void			parse_option_c(int argc, char **argv, char *arg, int *i);
 void			parse_option_s(int argc, char **argv, char *arg, int *i);
 void			parse_option_t(int argc, char **argv, char *arg, int *i);
+void			parse_option_i(int argc, char **argv, char *arg, int *i);
 #endif

@@ -25,7 +25,6 @@ void	send_icmp(void)
 {
 	unsigned char	snd_buf[SEND_BUF_SZ];
 	struct icmp		*icmp;
-	unsigned char	*payload;
 	ssize_t			res;
 
 	icmp = (struct icmp *)snd_buf;
@@ -34,8 +33,7 @@ void	send_icmp(void)
 	icmp->icmp_id = g_ft_ping.pid;
 	icmp->icmp_seq = ++g_ft_ping.seq;
 	icmp->icmp_cksum = 0;
-	payload = snd_buf + ICMP_PACKET_SZ;
-	fill_payload(payload, g_ft_ping.packet_size);
+	fill_payload(snd_buf + ICMP_PACKET_SZ, g_ft_ping.packet_size);
 	icmp->icmp_cksum = chksum(snd_buf, g_ft_ping.packet_size + ICMP_PACKET_SZ);
 	res = sendto(g_ft_ping.sock, snd_buf,
 			g_ft_ping.packet_size + ICMP_PACKET_SZ,
@@ -46,7 +44,7 @@ void	send_icmp(void)
 		add_to_queue(&g_ft_ping.root, g_ft_ping.seq);
 	}
 	dlog("sent: %ld", res);
-	alarm(1);
+	alarm(g_ft_ping.interval);
 }
 
 void	prepare_socket(void)
