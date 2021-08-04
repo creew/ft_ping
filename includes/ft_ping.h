@@ -15,6 +15,8 @@
 
 # include "libft.h"
 
+# include <netinet/ip.h>
+# include <netinet/ip_icmp.h>
 # include <netinet/in.h>
 # include <sys/time.h>
 
@@ -107,4 +109,6 @@ void			parse_option_c(int argc, char **argv, char *arg, int *i);
 void			parse_option_s(int argc, char **argv, char *arg, int *i);
 void			parse_option_t(int argc, char **argv, char *arg, int *i);
 void			parse_option_i(int argc, char **argv, char *arg, int *i);
+
+void			print_error(struct icmp *pIcmp);
 #endif

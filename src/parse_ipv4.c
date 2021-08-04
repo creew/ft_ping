@@ -75,6 +75,8 @@ void	parse_icmp(const unsigned char *recv_buf, ssize_t received,
 			if (elem != NULL)
 				parse_founded_packet(received, ip, icmp, elem);
 		}
+	} else {
+		print_error(icmp);
 	}
 }
 

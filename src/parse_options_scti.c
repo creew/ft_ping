@@ -11,8 +11,6 @@
 /* ************************************************************************** */
 
 #include "ft_ping.h"
-
-#include <netinet/ip_icmp.h>
 #include <stdio.h>
 
 void	parse_option_c(int argc, char **argv, char *arg, int *i)

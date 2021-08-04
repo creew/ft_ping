@@ -21,5 +21,5 @@ add_executable(ft_ping
         src/main.c
         src/icmp/chksum.c
         src/parse_options_scti.c
-        )
+        src/print_error.c)
 target_link_libraries(ft_ping ft m)
