@@ -13,9 +13,6 @@
 #include "ft_ping.h"
 
 #include <arpa/inet.h>
-#include <netdb.h>
-#include <netinet/ip.h>
-#include <netinet/ip_icmp.h>
 #include <stdio.h>
 
 static void	calc_rtt(float time)
@@ -46,14 +43,12 @@ static void	parse_founded_packet(ssize_t received, const struct ip *ip,
 	gettimeofday(&tv, NULL);
 	time = (float)tv_diff_nano(&tv, &elem->send_time) / 1000;
 	inet_ntop(AF_INET, &ip->ip_src, text_ip, sizeof(text_ip) - 1);
-	// TODO: не показывать два раза ip если был указан ip а не хост
 	dprintf(1, "%lu bytes from %s (%s): icmp_seq=%d ttl=%d time=%.3f ms\n",
 		received - sizeof(struct ip),
 		g_ft_ping.host, text_ip,
 		icmp->icmp_hun.ih_idseq.icd_seq, ip->ip_ttl, time);
 	calc_rtt(time);
 	g_ft_ping.packets_recv++;
-	ft_memdel((void **)elem);
 }
 
 void	parse_icmp(const unsigned char *recv_buf, ssize_t received,
@@ -66,14 +61,14 @@ void	parse_icmp(const unsigned char *recv_buf, ssize_t received,
 	dlog("type: %d, code: %d, id: %d, seq: %d", icmp->icmp_type,
 		 icmp->icmp_code, icmp->icmp_hun.ih_idseq.icd_id,
 		 icmp->icmp_hun.ih_idseq.icd_seq);
-	//TODO: Сделать обработку всех типов
-	if (icmp->icmp_type == ICMP_ECHOREPLY)
+	if (icmp->icmp_type == ICMP_ECHOREPLY || icmp->icmp_type == ICMP_ECHO)
 	{
 		if (icmp->icmp_hun.ih_idseq.icd_id == g_ft_ping.pid)
 		{
 			elem = poll_elem(&g_ft_ping.root, icmp->icmp_hun.ih_idseq.icd_seq);
 			if (elem != NULL)
 				parse_founded_packet(received, ip, icmp, elem);
+			ft_memdel((void **)&elem);
 		}
 	} else {
 		print_error(icmp);

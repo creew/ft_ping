@@ -51,7 +51,7 @@ typedef struct s_ft_ping
 
 	int				pid;
 
-	int				count_total;
+	unsigned int    count_total;
 	int				seq;
 	int				sock;
 
@@ -81,6 +81,7 @@ enum e_errors
 	OPTION_REQUIRED,
 	INVALID_SIZE_OF_PACKETS,
 	NO_MEMORY,
+	ICMP_ERR,
 	OK = 0
 };
 
@@ -89,7 +90,7 @@ int				parse_argv(int argc, char *argv[]);
 void			dlog(char *fmt, ...);
 void			err(int code);
 void			err_fmt(int code, char *fmt, ...);
-void			err_fmt_usage(int code, char *fmt, ...);
+void			err_fmt_usage(char *fmt, ...);
 unsigned short	chksum(void *addr, size_t len);
 void			print_stat(void);
 

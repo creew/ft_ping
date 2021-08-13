@@ -1,7 +1,7 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   parse_options_sct.c                                :+:      :+:    :+:   */
+/*   parse_options_scti.c                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: eklompus <eklompus@student.21-school.ru>   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
@@ -32,7 +32,7 @@ void	parse_option_s(int argc, char **argv, char *arg, int *i)
 		err_fmt(INVALID_COUNT_OF_PACKETS,
 			"ping: illegal negative packet size %d.",
 			g_ft_ping.packet_size);
-	if (g_ft_ping.packet_size > SEND_BUF_SZ - sizeof(struct icmp))
+	if ((unsigned long)g_ft_ping.packet_size > SEND_BUF_SZ - sizeof(struct icmp))
 		err_fmt(INVALID_SIZE_OF_PACKETS,
 			"Error: packet size 65600 is too large. Maximum is %lu",
 			SEND_BUF_SZ - sizeof(struct icmp));

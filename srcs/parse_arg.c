@@ -26,8 +26,7 @@ char	*parse_joined_option(int argc, char *const *argv, char *arg, int *i)
 			*i = *i + 1;
 		}
 		else
-			err_fmt_usage(OPTION_REQUIRED,
-				"ping: option requires an argument -- '%c'", arg_symbol);
+			err_fmt_usage("ping: option requires an argument -- '%c'", arg_symbol);
 	}
 	else
 	{

@@ -46,7 +46,7 @@ void	err_fmt(int code, char *fmt, ...)
 	va_end(argptr);
 }
 
-void	err_fmt_usage(int code, char *fmt, ...)
+void	err_fmt_usage(char *fmt, ...)
 {
 	va_list	argptr;
 
